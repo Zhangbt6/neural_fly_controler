@@ -1,0 +1,22 @@
+<launch>
+  <arg name="use_monitor" default="true" />
+  <!-- Parameters loaded from YAML -->
+  <rosparam command="load" file="$(find uam_controller)/config/controller_params.yaml" />
+  <rosparam command="load" file="$(find uam_controller)/config/uam_config.yaml" ns="uam_config" />
+
+  <!-- Dynamic reconfigure server is part of controller node -->
+
+  <!-- Controller node -->
+  <node pkg="uam_controller" type="controller_node" name="uam_controller_node" output="screen" />
+
+  <!-- Setpoint publisher -->
+  <node pkg="uam_controller" type="setpoint_publisher" name="setpoint_publisher" output="screen" />
+
+  <!-- Launch dynamic reconfigure UI for interactive gain tuning -->
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="uam_rqt_reconfigure" output="screen" />
+
+  <!-- 控制数据可视化监控台（需图形界面环境） -->
+  <!-- <group if="$(arg use_monitor)">
+    <node pkg="uam_controller" type="control_monitor.py" name="control_monitor" output="screen" />
+  </group> -->
+</launch>

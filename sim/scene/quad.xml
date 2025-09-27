@@ -1,0 +1,100 @@
+<mujoco model="444">
+<option integrator="implicit" timestep="0.005" viscosity="0.001" gravity="0 0 -9.81"/>
+
+  <default>
+    <default class="444">
+    </default>
+  </default>
+
+<worldbody>
+  <geom name="ground" type="plane" size="10 10 0.1" rgba="0.8 0.9 0.8 1"/>
+  <body name="444" pos="0 0 0.5" childclass="444">
+    <inertial pos="0 0 0" mass="2" diaginertia="0.01860 0.01860 0.03215"/>
+    <freejoint/>
+    <geom name="base" type="box" size="0.1 0.1 0.05" rgba="1 0 0 1"/>
+
+    <!-- X+ Y+ : 前左电机 -->
+    <body name="arm_fl">
+      <geom type="box" fromto="0 0 0 0.159 0.159 0" size="0.005" rgba="0.4 0.4 0.4 1"/>
+      <body name="motor_fl" pos="0.159 0.159 0">
+        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"/>
+        <body name="prop_fl">
+          <!-- <inertial pos="0 0 0.01" mass="0.001" diaginertia="0.0003 0.0003 0.00006"/> -->
+          <joint name="rotor_fl" type="hinge" axis="0 0 -1" damping="0.2"/>
+          <geom type="box" size="0.05 0.01 0.01" pos="0 0 0.02" rgba="0.8 0.8 0.8 1" contype="0" conaffinity="0"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- X+ Y- : 前右电机 -->
+    <body name="arm_fr">
+      <geom type="box" fromto="0 0 0 0.159 -0.159 0" size="0.005" rgba="0.4 0.4 0.4 1"/>
+      <body name="motor_fr" pos="0.159 -0.159 0">
+        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"/>
+        <body name="prop_fr">
+          <!-- <inertial pos="0 0 0.01" mass="0.001" diaginertia="0.0003 0.0003 0.00006"/> -->
+          <joint name="rotor_fr" type="hinge" axis="0 0 1" damping="0.2"/>
+          <geom type="box" size="0.05 0.01 0.01" pos="0 0 0.02" rgba="0.8 0.8 0.8 1" contype="0" conaffinity="0"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- X- Y+ : 后左电机 -->
+    <body name="arm_bl">
+      <geom type="box" fromto="0 0 0 -0.159 0.159 0" size="0.005" rgba="0.4 0.4 0.4 1"/>
+      <body name="motor_bl" pos="-0.159 0.159 0">
+        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"/>
+        <body name="prop_bl">
+          <!-- <inertial pos="0 0 0.01" mass="0.001" diaginertia="0.0003 0.0003 0.00006"/> -->
+          <joint name="rotor_bl" type="hinge" axis="0 0 1" damping="0.2"/>
+          <geom type="box" size="0.05 0.01 0.01" pos="0 0 0.02" rgba="0.8 0.8 0.8 1" contype="0" conaffinity="0"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- X- Y- : 后右电机 -->
+    <body name="arm_br">
+      <geom type="box" fromto="0 0 0 -0.159 -0.159 0" size="0.005" rgba="0.4 0.4 0.4 1"/>
+      <body name="motor_br" pos="-0.159 -0.159 0">
+        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"/>
+        <body name="prop_br">
+          <!-- <inertial pos="0 0 0.01" mass="0.001" diaginertia="0.0003 0.0003 0.00006"/> -->
+          <joint name="rotor_br" type="hinge" axis="0 0 -1" damping="0.2"/>
+          <geom type="box" size="0.05 0.01 0.01" pos="0 0 0.02" rgba="0.8 0.8 0.8 1" contype="0" conaffinity="0"/>
+        </body>
+      </body>
+    </body>
+    <site name="imu" pos="0 0 0.05"/>
+    <site name="motor1_site" pos="0.159 0.159 0.013"/>
+    <site name="motor2_site" pos="0.159 -0.159 0.013"/>
+    <site name="motor3_site" pos="-0.159 0.159 0.013"/>
+    <site name="motor4_site" pos="-0.159 -0.159 0.013"/>
+  </body>
+
+
+</worldbody>
+
+<actuator>
+  <velocity name="fr_motor" joint="rotor_fr" kv="1" gear="0.001" ctrlrange="0 1434.7 "/>
+  <velocity name="fl_motor" joint="rotor_fl" kv="1" gear="0.001" ctrlrange="0 1434.7 "/>
+  <velocity name="bl_motor" joint="rotor_bl" kv="1" gear="0.001" ctrlrange="0 1434.7 "/>
+  <velocity name="br_motor" joint="rotor_br" kv="1" gear="0.001" ctrlrange="0 1434.7 "/>
+  
+  <motor class="444" ctrlrange="0 1" gear="0 0 12.5 0 0 -0.2175" site="motor1_site" name="motor1"/>
+  <motor class="444" ctrlrange="0 1" gear="0 0 12.5 0 0 0.2175" site="motor2_site" name="motor2"/>
+  <motor class="444" ctrlrange="0 1" gear="0 0 12.5 0 0 0.2175" site="motor3_site" name="motor3"/>
+  <motor class="444" ctrlrange="0 1" gear="0 0 12.5 0 0 -0.2175" site="motor4_site" name="motor4"/>
+</actuator>
+
+<sensor>
+  <gyro name="imu_gyro" site="imu"/>
+  <accelerometer name="body_linacc" site="imu"/>
+  <framequat name="body_quat" objtype="site" objname="imu"/>
+</sensor>
+
+<keyframe>
+  <key name="hover"
+       qpos="0 0 0.1 1 0 0 0 0 0 0 0"
+       ctrl="0 0 0 0  0 0 0 0"/>
+</keyframe>
+</mujoco>

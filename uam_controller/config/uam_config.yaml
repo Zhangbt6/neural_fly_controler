@@ -1,0 +1,38 @@
+#SIM_MODE 1
+#DEBUG_MODE 2
+#EXP_MODE 3
+mode_exp: 1
+max_thrust: 50.0
+
+mass_quad_body: 2.458
+inertia_quad_body: {xx: 0.01860, xy: 0.0, xz: 0.0, yy: 0.01860, yz: 0.0, zz: 0.03215}
+config_quad_body: {body_width: 0.3, body_height: 0.16, arm_length: 0.225}
+
+mass_rotor: 0.005  # [kg]
+rotor_offset_top: 0.023  # [m]
+radius_rotor: 0.1  # [m]
+motor_constant: 6.450e-6  # [kg.m/s^2] 电机拉力常数 Ct : F = ω*ω*Ct
+moment_constant: 1.056e-7  # [m]
+time_constant_up: 0.0125  # [s]
+time_constant_down: 0.025  # [s]
+max_rot_velocity: 1434.7  # [rad/s]  13698.7 rpm
+sin30: 0.5
+cos30: 0.866025403784
+sqrt2: 1.4142135623730951
+rotor_drag_coefficient: 8.06428e-05  # 风阻系数
+rolling_moment_coefficient: 0.000001
+
+
+arm_joint_num: 2
+single_node: true
+update_mass: false
+flipped: false
+delay_steps: 0.0
+
+# MATH: 如果桨效和起飞质量其中之一可以精确测量，则另一个量可以估计出来
+rotor_configuration:
+  '0': {angle: 0.78539, arm_length: 0.225, rotor_force_constant: 6.450e-6, rotor_moment_constant: 1.056e-7, direction: -1.0}
+  '1': {angle: -0.78539, arm_length: 0.225, rotor_force_constant: 6.450e-6, rotor_moment_constant: 1.056e-7, direction: 1.0}
+  '2': {angle: 2.35619, arm_length: 0.225, rotor_force_constant: 6.450e-6, rotor_moment_constant: 1.056e-7, direction: 1.0}
+  '3': {angle: -2.35619, arm_length: 0.225, rotor_force_constant: 6.450e-6, rotor_moment_constant: 1.056e-7, direction: -1.0}
+

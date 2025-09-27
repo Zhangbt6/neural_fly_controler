@@ -1,0 +1,70 @@
+<mujoco model="quad scene">
+  <include file="quad_gripper_v2.xml"/>
+
+  <statistic center="0 0 0.1" extent="0.2" meansize=".05"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="-20" elevation="-20" ellipsoidinertia="true"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
+      markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+    <material name="trashbin_mat" rgba="0.2 0.2 0.2 1"/>
+  </asset>
+
+  <worldbody>
+    <camera
+      name="world_camera"
+      pos="0.5 -4 1"
+      mode="fixed"
+      xyaxes="1 0 0   0 0 1"/>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="0 0 0.01" pos="0 0 -0.01" type="plane" material="groundplane"/>
+
+    <!-- 桌子本体，位置修改为 x=1 -->
+    <body name="table" pos="1 0 0.96">
+      <geom name="table_top" type="box" size="0.3 0.3 0.02" rgba="0.6 0.4 0.2 1"/>
+      <geom type="box" pos=" 0.25  0.25 -0.23" size="0.02 0.02 0.2" rgba="0.3 0.2 0.1 1"/>
+      <geom type="box" pos=" 0.25 -0.25 -0.23" size="0.02 0.02 0.2" rgba="0.3 0.2 0.1 1"/>
+      <geom type="box" pos="-0.25  0.25 -0.23" size="0.02 0.02 0.2" rgba="0.3 0.2 0.1 1"/>
+      <geom type="box" pos="-0.25 -0.25 -0.23" size="0.02 0.02 0.2" rgba="0.3 0.2 0.1 1"/>
+    </body>
+
+    <!-- 抓取物体1：小立方体，位置修改为 x=1 -->
+    <body name="obj_cube" pos="1 0 1.01">
+      <joint name="obj_cube:joint" type="free" damping="0.001" frictionloss="0" />
+      <geom name="obj_cube_geom" type="box" size="0.025 0.025 0.025" rgba="1 0 0 1" mass="0.001"
+            condim="4" solimp="2 1 0.01" solref="0.01 1" friction="1 0.005 0.0001" />
+      <site name="obj_cube_site" pos="0 0 0" size="0.015" rgba="1 0 0 0.3" type="sphere" group="1" />
+    </body>
+
+    <body name="trash_bin" pos="2 0 0.5">
+      <!-- 底盘：半径增大为原来的1.5倍 -->
+      <geom name="trash_bin_base" type="cylinder" pos="0 0 0.01" size="0.24 0.02" rgba="0.15 0.15 0.15 1"
+            condim="6" solimp="0.9 0.95 0.001" friction="1 0.1 0.001"/>
+      
+      <!-- 桶体（外壳）：半径增大为原来的1.5倍 -->
+      <geom name="trash_bin_body" type="cylinder" pos="0 0 0.17" size="0.225 0.3" rgba="0.2 0.2 0.2 1"
+            condim="6" solimp="0.9 0.95 0.001" friction="1 0.1 0.001"/>
+      
+      <!-- 内壁，半径增大为原来的1.5倍，禁用碰撞 -->
+      <geom name="trash_bin_inner" type="cylinder" pos="0 0 0.17" size="0.195 0.3" rgba="0.8 0.8 0.8 0.3"
+            contype="0" conaffinity="0"/>
+      
+      <!-- 站位点，可用于检测放入位置 -->
+      <site name="trash_bin_site" pos="0 0 0.45" size="0.15" rgba="0 1 0 0.3" type="sphere"/>
+    </body>
+
+
+    <!-- 墙板，放在 x=3m，y=0，z=1m（高2米，厚0.1米，宽1.5米） -->
+    <geom name="wall_panel" type="box" pos="6 0 1" size="0.05 0.75 1" rgba="0.4 0.15 0.15 1" friction="1 0.1 0.001"/>
+
+
+    
+  </worldbody>
+</mujoco>

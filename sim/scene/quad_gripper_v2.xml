@@ -1,0 +1,185 @@
+<mujoco model="444">
+<option integrator="implicit" timestep="0.005" gravity="0 0 -9.81"/>
+
+  <default>
+    <default class="444">
+    </default>
+  </default>
+
+<worldbody>
+  <body name="444" pos="0 0 1.6" childclass="444">
+    <inertial pos="0 0 0" mass="2" diaginertia="0.01860 0.01860 0.03215"/>
+    <freejoint/>
+    <geom name="base" type="box" size="0.1 0.1 0.05" rgba="1 0 0 1"/>
+
+    <!-- 无人机前视摄像头（前向固定） -->
+  <camera name="front_cam"
+          pos="0.05 0 -0.1"
+          mode="fixed"
+          resolution="640 480"
+          sensorsize="0.006846 0.003853"
+          focalpixel="615.3451538 615.4043579"
+          orthographic="false"
+          xyaxes="0 -1 0   0.5 0 0.866"/>
+
+    <!-- X+ Y+ : 前左电机 -->
+    <body name="arm_fl">
+      <geom type="box" fromto="0 0 0 0.159 0.159 0" size="0.005" rgba="0.4 0.4 0.4 1"/>
+      <body name="motor_fl" pos="0.159 0.159 0">
+        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"/>
+        <body name="prop_fl">
+          <!-- <inertial pos="0 0 0.01" mass="0.001" diaginertia="0.0003 0.0003 0.00006"/> -->
+          <joint name="rotor_fl" type="hinge" axis="0 0 -1" damping="0.2"/>
+          <geom type="box" size="0.05 0.01 0.01" pos="0 0 0.02" rgba="0.8 0.8 0.8 1" contype="0" conaffinity="0"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- X+ Y- : 前右电机 -->
+    <body name="arm_fr">
+      <geom type="box" fromto="0 0 0 0.159 -0.159 0" size="0.005" rgba="0.4 0.4 0.4 1"/>
+      <body name="motor_fr" pos="0.159 -0.159 0">
+        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"/>
+        <body name="prop_fr">
+          <!-- <inertial pos="0 0 0.01" mass="0.001" diaginertia="0.0003 0.0003 0.00006"/> -->
+          <joint name="rotor_fr" type="hinge" axis="0 0 1" damping="0.2"/>
+          <geom type="box" size="0.05 0.01 0.01" pos="0 0 0.02" rgba="0.8 0.8 0.8 1" contype="0" conaffinity="0"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- X- Y+ : 后左电机 -->
+    <body name="arm_bl">
+      <geom type="box" fromto="0 0 0 -0.159 0.159 0" size="0.005" rgba="0.4 0.4 0.4 1"/>
+      <body name="motor_bl" pos="-0.159 0.159 0">
+        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"/>
+        <body name="prop_bl">
+          <!-- <inertial pos="0 0 0.01" mass="0.001" diaginertia="0.0003 0.0003 0.00006"/> -->
+          <joint name="rotor_bl" type="hinge" axis="0 0 1" damping="0.2"/>
+          <geom type="box" size="0.05 0.01 0.01" pos="0 0 0.02" rgba="0.8 0.8 0.8 1" contype="0" conaffinity="0"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- X- Y- : 后右电机 -->
+    <body name="arm_br">
+      <geom type="box" fromto="0 0 0 -0.159 -0.159 0" size="0.005" rgba="0.4 0.4 0.4 1"/>
+      <body name="motor_br" pos="-0.159 -0.159 0">
+        <geom type="box" size="0.02 0.02 0.02" rgba="0 0 1 1"/>
+        <body name="prop_br">
+          <!-- <inertial pos="0 0 0.01" mass="0.001" diaginertia="0.0003 0.0003 0.00006"/> -->
+          <joint name="rotor_br" type="hinge" axis="0 0 -1" damping="0.2"/>
+          <geom type="box" size="0.05 0.01 0.01" pos="0 0 0.02" rgba="0.8 0.8 0.8 1" contype="0" conaffinity="0"/>
+        </body>
+      </body>
+    </body>
+    <site name="imu" pos="0 0 0.0"/>
+    <site name="motor1_site" pos="0.159 0.159 0.013"/>
+    <site name="motor2_site" pos="0.159 -0.159 0.013"/>
+    <site name="motor3_site" pos="-0.159 0.159 0.013"/>
+    <site name="motor4_site" pos="-0.159 -0.159 0.013"/>
+
+    <!-- ====== 二轴机械臂开始 ====== -->
+    <body name="link1" pos="0 0 -0.1">
+      <inertial pos="0 0 0" mass="0.15" diaginertia="0.0001431 0.0001431 0.0000050"/>
+      <geom type="box" size="0.01 0.01 0.075" pos="0 0 0" rgba="0.6 0.6 0.6 1"/>
+      <joint name="joint1" type="hinge" pos="0 0 0.075" axis="0 -1 0" damping="0.1"/>
+
+      <body name="link2" pos="0 0 -0.15">
+        <inertial pos="0 0 0" mass="0.15" diaginertia="0.0001431 0.0001431 0.0000050"/>
+        <geom type="box" size="0.01 0.01 0.075" pos="0 0 0" rgba="0.4 0.4 0.8 1"/>
+        <joint name="joint2" type="hinge" pos="0 0 0.075" axis="0 -1 0" damping="0.1"/>
+
+        <!-- <camera name="gripper_cam" pos="0.05 0 0.02" xyaxes="0 -1 0 1 0 0"/> -->
+        <!-- 机械臂末端摄像头（指向抓取方向），模拟 RealSense D435 参数 principalpixel="313.393707275391 251.593811035156"-->
+        <camera name="gripper_cam"
+                pos="0.05 0 0.05"
+                xyaxes="0 -1 0 1 0 0"
+                mode="fixed"
+                resolution="640 480"
+                sensorsize="0.006846 0.003853" 
+                focalpixel="615.345153808594 615.404357910156"
+                orthographic="false"/>
+
+
+        <body name="wrist" pos="0 0 -0.085">
+            <inertial pos="0 0 0" mass="0.03" diaginertia="0.0000740 0.0000040 0.0000740"/>
+            <geom type="box" size="0.01 0.06 0.01" pos="0 0 0" rgba="0.8 0.4 0.4 1"/>
+
+          <joint name="joint3" type="hinge" pos="0 0 0" axis="0 0 1" damping="0.1"/>
+                    
+          <body name="gripper_finger1" pos="0 0.05 -0.03">
+            <inertial pos="0 0 0" mass="0.009875" diaginertia="0.0000033 0.0000033 0.0000013"/>
+            <geom type="box" size="0.01 0.01 0.03" pos="0 0 0" rgba="0.2 0.2 0.2 1" 
+                   condim="4" solimp="2 1 0.01" solref="0.01 1" friction="1 0.005 0.0001"/>
+            <joint name="finger1_joint" type="slide" pos="0 0 0" axis="0 -1 0" range="0 0.04" frictionloss="30"/>
+          </body>
+
+          <body name="gripper_finger2" pos="0 -0.05 -0.03">
+            <inertial pos="0 0 0" mass="0.009875" diaginertia="0.0000033 0.0000033 0.0000013"/>
+            <geom type="box" size="0.01 0.01 0.03" pos="0 0 0" rgba="0.2 0.2 0.2 1"
+                   condim="4" solimp="2 1 0.01" solref="0.01 1" friction="1 0.005 0.0001"/>
+            <joint name="finger2_joint" type="slide" pos="0 0 0" axis="0 1 0" range="0 0.04" frictionloss="30"/>
+          </body>
+
+        </body>
+      </body>
+    </body>
+<!-- ====== 二轴机械臂结束 ====== -->
+  </body>
+</worldbody>
+
+<equality>
+  <joint joint1="finger1_joint" joint2="finger2_joint" solimp="0.95 0.99 0.001" solref="0.005 1"/>
+</equality>
+
+<tendon>
+  <fixed name="gripper_tendon">
+    <joint joint="finger1_joint" coef="0.5"/>
+    <joint joint="finger2_joint" coef="0.5"/>
+  </fixed>
+</tendon>
+
+<actuator>
+  <velocity name="fr_motor" joint="rotor_fr" kv="1" gear="0.001" ctrlrange="0 1434.7 "/>
+  <velocity name="fl_motor" joint="rotor_fl" kv="1" gear="0.001" ctrlrange="0 1434.7 "/>
+  <velocity name="bl_motor" joint="rotor_bl" kv="1" gear="0.001" ctrlrange="0 1434.7 "/>
+  <velocity name="br_motor" joint="rotor_br" kv="1" gear="0.001" ctrlrange="0 1434.7 "/>
+  
+  <motor class="444" ctrlrange="0 1" gear="0 0 12.5 0 0 -0.2175" site="motor1_site" name="motor1"/>
+  <motor class="444" ctrlrange="0 1" gear="0 0 12.5 0 0 0.2175" site="motor2_site" name="motor2"/>
+  <motor class="444" ctrlrange="0 1" gear="0 0 12.5 0 0 0.2175" site="motor3_site" name="motor3"/>
+  <motor class="444" ctrlrange="0 1" gear="0 0 12.5 0 0 -0.2175" site="motor4_site" name="motor4"/>
+
+    <!-- 添加机械臂关节位置伺服 -->
+  <position name="act_joint1" joint="joint1" kp="100" kv="10" ctrlrange="-1.39626 1.39626"/>
+  <position name="act_joint2" joint="joint2" kp="100" kv="10" ctrlrange="-2.61799 2.61799"/>
+  <position name="act_joint3" joint="joint3" kp="100" kv="10" ctrlrange="-3.14159 3.14159"/>
+  <!-- <position name="act_finger1" joint="finger1_joint" kp="20" kv="2" gear="-1" ctrlrange="0 0.03"/>
+  <position name="act_finger2" joint="finger2_joint" kp="20" kv="2" gear="1" ctrlrange="0 0.03"/> -->
+  <!-- <position name="act_finger" tendon="gripper_tendon" kp="100" kv="4" gear="1" ctrlrange="0 0.3"/> -->
+  <!-- <general name="act_finger" tendon="gripper_tendon" forcerange="-100 100" ctrlrange="0 0.05" gainprm="0.01568627451 0 0" biasprm="0 -100 -10"/> -->
+  <general name="act_finger" tendon="gripper_tendon" forcerange="-100 100" ctrlrange="0 255"  dyntype="none" biastype="affine" 
+            gainprm="0.01568627451 0 0" biasprm="0 -100 -10" />
+            <!-- biastype="affine" 这一设置非常关键，否则指头会滑动 -->
+</actuator>
+
+<sensor>
+  <gyro name="imu_gyro" site="imu"/>
+  <accelerometer name="body_linacc" site="imu"/>
+  <framequat name="body_quat" objtype="site" objname="imu"/>
+</sensor>
+
+
+  <!-- 
+    初始“hover”关键帧：
+    - qpos 共 16 个标量（7 个自由度 + 9 个铰链/滑动关节）后7个为抓取物体
+    - ctrl 共 12 个标量（对应 12 个 actuator）
+  -->
+<!-- <keyframe>
+  <key name="hover"
+       qpos="0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+       ctrl="0 0 0 0 0 0 0 0 0 0 0 0"/>
+</keyframe> -->
+
+</mujoco>

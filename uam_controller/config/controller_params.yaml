@@ -1,0 +1,55 @@
+uam_controller_node:
+  frame_id: "world"
+  odom_topic: "/quad/odometry"
+  disturbance_topic: "/quad/disturbance_estimate"
+  motor_cmd_topic: "/quad/motor_cmd"
+  setpoint_topic: "/quad/position_setpoint"
+  control_rate: 200.0
+  mass: 2.458
+  gravity: 9.8066
+  max_thrust: 50.0
+  hover_throttle: 0.5
+  arm_length: 0.225
+  motor_constant: 6.450e-6
+  moment_constant: 1.056e-7
+  inertia_xx: 0.01860
+  inertia_yy: 0.01860
+  inertia_zz: 0.03215
+  motor_time_constant_up: 0.0125
+  motor_time_constant_down: 0.025
+  rotor_directions: [-1.0, 1.0, 1.0, -1.0]
+  motor_force_scale: 12.5
+  velocity_filter_alpha: 0.35
+  integral_limit: 0.2
+  feedforward_timeout: 0.2
+  motor_min_cmd: 0.0
+  motor_max_cmd: 0.95
+  position_kp_xy: 1.2
+  position_kp_z: 6.0
+  velocity_kd_xy: 1.5
+  velocity_kd_z: 3
+  attitude_kp_roll: 6.0
+  attitude_kp_pitch: 6.0
+  attitude_kp_yaw: 6.0
+  attitude_ki_roll: 0.0
+  attitude_ki_pitch: 0.0
+  attitude_ki_yaw: 0.0
+  attitude_kd_roll: 1.2
+  attitude_kd_pitch: 1.2
+  attitude_kd_yaw: 1.2
+  max_tilt_deg: 35.0
+  max_ascent_rate: 2.0
+  max_descent_rate: 1.0
+  use_yaw_rate_stabilizer: true
+
+setpoint_publisher:
+  publish_rate: 20.0
+  start_delay: 1.0
+  trajectory: "hover"
+  hover_point: [0.0, 0.0, 1.0]
+  path_frame_id: "world"
+  setpoint_topic: "/quad/position_setpoint"
+  circle_radius: 1.0
+  circle_period: 20.0
+  line_speed: 0.5
+  line_length: 2.0

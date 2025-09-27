@@ -41,6 +41,8 @@ target_link_libraries(setpoint_publisher ${catkin_LIBRARIES})
 
 catkin_install_python(PROGRAMS
   scripts/control_monitor.py
+  scripts/rls_adapter.py
+  ${PROJECT_SOURCE_DIR}/../neural-fly/ros_nodes/data_collector.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

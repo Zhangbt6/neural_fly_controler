@@ -18,6 +18,13 @@ This data and code is provided as part of the Science Robotics research article 
 
 Please run `training-and-validation.ipynb`, which demonstrates the Domain Adversarially Invariant Meta Learning (DAIML) algorithm. DAIML is the offline learning process for Neural-Fly. This script trains a wind-invariant representation of the aerodynamic effects on a quadrotor. After training the model, some simple statistics and plots are generated which show the model performance fitting to the training and testing data. 
 
+### 在本复现仓中如何使用
+
+- `python ros_nodes/data_collector.py --log-directory $(pwd)/data/sim_log --vehicle sim`：激活 conda 环境后运行，订阅 ROS 话题采集数据并保存 csv。
+- `python train_phi.py --data-folder data/sim_log --model-name phi_sim`：脚本化训练 φ_net，保存为 `models/phi_sim.pth`。
+- `python eval_phi.py --model-name phi_sim`：快速计算各域残差误差。
+- 在线阶段由 `python ros_nodes/rls_adapter.py --ros-args --param model_name:=phi_sim` 加载模型，在闭环中进行 RLS 扰动补偿。
+
 ## Filenaming scheme
 
 Filenames are structured as

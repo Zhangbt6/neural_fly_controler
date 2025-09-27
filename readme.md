@@ -1,166 +1,128 @@
-# 🛠️ Imitation Learning for Flying Gripper in MuJoCo (dm_control)
+# Neural-Fly 控制系统复现框架
 
-本仓库基于 ACT 和自定义的 MPC 控制器，训练带机械臂的飞行器完成抓取任务。训练后的策略可用于实时控制仿真器或实物系统。
-⚠️ 使用前请确保已编译并运行 `ocs2_uam_ros` 功能包。
+本仓库基于 ROS + MuJoCo 构建了复现 Neural-Fly / DAIML 思路的整体控制系统框架。目标是完成从离线表征到在线适配的闭环验证，当前仓库重点实现了可在 MuJoCo 仿真中运行的基础控制与调试工具。
 
----
-
-## 📁 项目结构说明
+## 仓库结构
 
 ```
 .
-├── ckpts/                    # 模型权重和归一化统计数据
-├── data/                     # 采集的训练数据集
-├── scene/                    # 仿真所用的 MuJoCo 场景 XML 文件
-├── __pycache__/              # Python 缓存目录
-├── constants.py              # 常量定义
-├── detr/                     # 模型结构定义模块（含DETR、Transformer等）
-├── ee_sim.py                 # 单独运行的 dm_control 模拟器入口（用于调试环境）
-├── ee_sim_env.py             # 包装环境的类（用于数据采集/训练）
-├── imitate_episodes.py       # 模仿学习训练与评估入口
-├── mpc_server.py             # 启动与 MPC 控制器通信的服务端
-├── policy.py                 # ACT / CNNMLP 等策略网络定义
-├── quad_ros.py               # 原生 MuJoCo 搭建的无人机抓取器仿真环境（非 dm_control）
-├── readme.md                 # 本说明文档
-├── record_sim_episodes.py    # 执行数据采集脚本
-├── run_proxy_controller.py   # 多线程部署推理控制器（仿真推步 + 网络推理）
-├── theta_draw.py             # 可视化机械臂角度随时间变化的辅助工具
-├── utils.py                  # 工具函数（如图像处理、观测处理、数据读取）
-├── visualize_episodes.py     # 可视化采集数据集中某一集的图像和动作序列
+├─ sim/                         # MuJoCo 场景与 ROS 接口
+│  ├─ quad_ros.py               # 仿真主进程：接入 ROS 话题、执行器控制
+│  └─ scene/                    # MuJoCo XML 场景（含四旋翼机械臂、风场配置等）
+├─ uam_controller/              # ROS 控制器功能包
+│  ├─ cfg/ControllerConfig.cfg  # 动态参数配置（PD/PID、补偿开关等）
+│  ├─ config/
+│  │  ├─ controller_params.yaml # 控制器默认参数、惯量、旋翼方向等
+│  │  └─ uam_config.yaml        # 从仿真场景同步的结构化参数
+│  ├─ include/uam_controller/
+│  │  ├─ controller.hpp         # 控制节点类声明
+│  │  ├─ debug_macros.hpp       # 调试宏、节流与话题发布工具
+│  │  └─ log_publisher.hpp      # 日志话题发布器封装
+│  ├─ scripts/control_monitor.py# Matplotlib 实时监控台
+│  ├─ src/
+│  │  ├─ controller_node.cpp    # 位置 PD + 姿态 PID + 扰动前馈核心闭环
+│  │  └─ setpoint_publisher.cpp # 简易参考轨迹发布节点
+│  └─ launch/uam_controller.launch
+│                             # 启动控制器、参考轨迹、rqt_reconfigure、监控台
+└─ readme.md                   # 当前说明文档
 ```
 
----
+## 功能概述
 
-## 🧠 模仿学习训练流程
+- **仿真桥接**：`sim/quad_ros.py` 将 MuJoCo 场景与 ROS 话题互通，接收电机指令、发布里程计、关节状态、轨迹等信息。
+- **基础控制器**：`uam_controller` 包实现了位置 PD + 姿态 PID 的双层控制，同时保留扰动前馈接口，为后续接入 Neural-Fly 的线性适配头做准备。
+- **调试体系**：通过自定义调试宏与日志发布器，将姿态误差、角加速度指令、扭矩指令、混合后推力、油门等信息发布到 `/uam_controller/debug/*` 话题，可直接在 rqt_plot 或监控台查看。
+- **图形监控台**：`scripts/control_monitor.py` 订阅调试话题并以 Matplotlib 实时绘制位置、速度、误差、电机油门等曲线。
+- **数据采集/训练模块**：`neural-fly/ros_nodes/data_collector.py`、`neural-fly/train_phi.py`、`neural-fly/eval_phi.py` 提供从仿真话题采数 → 训练 φ_net → 评估的完整流水线。
+- **在线扰动估计**：`uam_controller/scripts/rls_adapter.py` 加载训练好的 φ_net，执行 RLS 更新并实时发布扰动补偿量，控制器读取后进行前馈抵消。
+- **动态调参**：集成 `dynamic_reconfigure`，可在运行中调整位置/姿态 PID、扰动补偿开关、油门上下限等参数。
 
-以下流程涵盖从仿真环境部署、数据采集，到策略训练与评估。
+## 快速开始
 
-> 💡 **提示**：运行任意 Python 脚本前，请先执行 `conda activate aloha`，以确保依赖正确加载。
+1. **依赖环境**
+   - ROS Noetic（或同等 ROS1 环境）
+   - MuJoCo 2.x 及 Python API（`mujoco` 与 `mujoco-python-viewer`）
+   - Python 依赖：`numpy`、`matplotlib`、`rospy`、`tf2_ros` 等（catkin 自动处理大部分 ROS 依赖）
 
-### 1. 进入 Python 环境
+2. **构建与编译**
+   ```bash
+   cd ~/Neural_Fly_ws
+   catkin build uam_controller
+   source devel/setup.bash
+   ```
 
-```bash
-conda create -n aloha python=3.8.10
-conda activate aloha
-pip install torchvision
-pip install torch
-pip install pyquaternion
-pip install pyyaml
-pip install rospkg
-pip install pexpect
-pip install mujoco==3.2.1
-pip install dm_control==1.0.22
-pip install opencv-python
-pip install matplotlib
-pip install einops
-pip install packaging
-pip install h5py
-pip install ipython
-cd /detr && pip install -e .
-```
+3. **启动仿真与控制器**
+   ```bash
+   roslaunch uam_controller uam_controller.launch
+   ```
+   - 默认会启动：控制器节点、参考轨迹发布节点、rqt_reconfigure、控制监控台。
+   - 如无图形界面，可通过 `use_monitor:=false` 禁用监控台。
 
----
+4. **调试与可视化**
+   - 运行过程中，可在 rqt_reconfigure 调整 PID、扰动补偿等参数。
+   - 调试话题示例：
+     - `/uam_controller/debug/position`
+     - `/uam_controller/debug/attitude_error`
+     - `/uam_controller/debug/ang_acc_cmd`
+     - `/uam_controller/debug/torque_cmd`
+     - `/uam_controller/debug/throttle_0~3`
+   - `control_monitor.py` 将上述话题绘制为六个实时子图。
 
-### 2. 启动 MPC 控制器（用于数据采集）
+## 数据采集 → 训练 → 在线适配
 
-```bash
-# 启动 MPC 服务端
-python mpc_server.py
+1. **采集数据**
+   ```bash
+   # 先 source ROS 工作空间，再激活 conda 环境 (含 torch 等)
+   conda activate aloha
+   python neural-fly/ros_nodes/data_collector.py \
+       --log-directory $(pwd)/neural-fly/data/sim_log \
+       --vehicle sim --trajectory random3 \
+       --method NF-sim --condition 40wind
+   # 另开终端启动采集
+   rosservice call /neural_fly_data_collector/start "data: true"
+   # 完成后停止并保存
+   rosservice call /neural_fly_data_collector/stop_and_save
+   ```
+   - 节点自动根据里程计、motor_cmd 计算 `fa`，输出 csv 文件可直接喂入训练脚本。
 
-# 启动 ROS 控制器发布器
-rosrun ocs2_uam_ros uam_mpc_publisher_seq_point
-```
+2. **训练 φ_net**
+   ```bash
+   conda activate aloha
+   cd neural-fly
+   python train_phi.py --data-folder data/sim_log --model-name phi_sim --epochs 80 \
+       --support-size 32 --query-size 128 --latent-dim 32
+   ```
+   训练结束模型存放于 `neural-fly/models/phi_sim.pth`。
 
----
+3. **评估**
+   ```bash
+   conda activate aloha
+   python eval_phi.py --model-name phi_sim --data-folder data/sim_log
+   ```
 
-### 3. 采集模仿数据（由 MPC 控制器驱动）
+4. **在线扰动补偿**
+   ```bash
+   conda activate aloha
+   python neural-fly/ros_nodes/rls_adapter.py \
+       --ros-args --param model_name:=phi_sim --param model_folder:=neural-fly/models
+   ```
+   节点订阅 `/quad/odometry` 与 `/quad/motor_cmd`，在 `/quad/disturbance_estimate` 发布残差力，控制器会自动读取并做前馈补偿。
 
-```bash
-python record_sim_episodes.py --task_name sim_uam_grasp_cube_scripted --onscreen_render
-```
+## 常见参数说明
 
-执行完后可关闭MPC服务器与控制发布ROS节点
+- **旋翼配置**：默认从 `config/controller_params.yaml` 和 `/uam_config/rotor_configuration` 读取，保证与 MuJoCo 场景一致。若修改 XML 中电机臂长/方向，请同步更新 YAML 或 `uam_config.yaml`。
+- **惯量参数**：在 `controller_params.yaml` 中配置 `inertia_xx/yy/zz`，控制器将 PID 输出视为角加速度指令，并自动乘以惯量得到扭矩。
+- **调试等级**：通过编译选项 `-DUAM_DEBUG_LEVEL={0,1,2}` 控制日志与话题输出范围；LEVEL ≥2 时才会发布调试话题与采集/在线节点所需的关键数据。
 
----
+## 后续规划
 
-### 4. 查看采集数据
+- 接入 Neural-Fly 离线表征模块，加载 φ(x) 并实现 RLS/复合自适应在线头。
+- 在仿真中构建多风场、多轨迹采集流程，实现真实数据驱动的离线训练。
+- 扩展监控台，支持更丰富的状态、误差与域间对比分析。
 
-```bash
-python3 visualize_episodes.py --dataset_dir ./data --episode_idx 0
-```
+## 参考
 
----
+- Neural-Fly: https://arxiv.org/abs/2203.09452
+- DAIML 原官方代码：请参阅仓库 `neural-fly`（需自行克隆）
 
-### 5. 执行策略训练与评估（支持 ACT / CNNMLP）
-
-```bash
-# 仅训练
-python3 imitate_episodes.py \
-  --task_name sim_uam_grasp_cube_scripted \
-  --ckpt_dir ./ckpts \
-  --policy_class ACT \
-  --batch_size 4 \
-  --seed 0 \
-  --num_epochs 400 \
-  --lr 1e-5 \
-  --kl_weight 6 \
-  --chunk_size 50 \
-  --hidden_dim 128 \
-  --dim_feedforward 800
-
-# 仅评估
-python3 imitate_episodes.py \
-  --task_name sim_uam_grasp_cube_scripted \
-  --ckpt_dir ./ckpts \
-  --policy_class ACT \
-  --batch_size 4 \
-  --seed 0 \
-  --num_epochs 500 \
-  --lr 1e-5 \
-  --kl_weight 10 \
-  --chunk_size 50 \
-  --hidden_dim 128 \
-  --dim_feedforward 800 \
-  --onscreen_render \
-  --eval
-
-```
-
----
-
-### 7. 推理控制（部署训练好的策略）
-
-```bash
-# 启动 MPC 服务端
-python mpc_server.py
-
-# 启动 ROS 控制器接收器
-rosrun ocs2_uam_ros uam_ee_sub
-
-
-```
-
-```bash
-python3 run_proxy_controller.py \
-  --policy_class ACT \
-  --ckpt_dir ./ckpts \
-  --task_name sim_uam_grasp_cube_scripted \
-  --seed 0 \
-  --num_epochs 100 \
-  --onscreen_render
-```
-
----
-
-## 📌 其他脚本说明
-
-- `quad_ros.py`基于原生 MuJoCo Python 接口搭建的无人机 + 机械臂仿真器，非 dm_control 框架，适用于其他实验需求。
-- `theta_draw.py`用于可视化机械手的关节角度（如通过 MPC 控制器执行后记录的数据），帮助分析策略行为和控制曲线。
-- `ee_sim.py`
-  基于dm_control的仿真器，用于调试数据采集仿真环境。
-
-```bash
-python ee_sim.py ./scene/scene_quad_with_gripper.xml --camera_id 0
-```
-
----
+如有问题或建议，欢迎提交 issue，共同完善该控制系统复现框架。

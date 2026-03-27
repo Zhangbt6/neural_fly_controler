@@ -122,7 +122,7 @@
 
 ## 参考
 
-- Neural-Fly: https://arxiv.org/abs/2203.09452
+- Neural-Fly:https://www.science.org/doi/10.1126/scirobotics.abm6597
 - DAIML 原官方代码：请参阅仓库 `neural-fly`（需自行克隆）
 
 如有问题或建议，欢迎提交 issue，共同完善该控制系统复现框架。
